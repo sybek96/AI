@@ -3,7 +3,11 @@
 #include "Window.h"
 #include <iostream>
 
-
+struct Steering
+{
+	float angularVel;
+	sf::Vector2f linearVel;
+};
 /// <summary>
 /// The enemy entity class
 /// 
@@ -11,6 +15,7 @@
 /// </summary>
 class Enemy
 {
+
 public:
 	enum class AI {Wander,Seek,Flee,Arrive};
 	//default constructor
@@ -53,6 +58,8 @@ public:
 	float getNewOrientation(float currentOrientation, sf::Vector2f vel);
 	sf::Vector2f normalizeVec(sf::Vector2f vec);
 	float lengthVec(sf::Vector2f vec);
+	void setVectorAngle(sf::Vector2f& vector, float radians);
+	Steering getWanderSteering();
 private:
 	//velocity
 	sf::Vector2f m_velocity;
@@ -72,6 +79,10 @@ private:
 	static const float s_PI;
 	//maximum rotation amount
 	static const float s_MAX_ROTATION;
+
+	static const float s_DEG_TO_RAD;
+	static const float s_RAD_TO_DEG;
+
 	//the ai type
 	AI m_ai;
 	//target position of the AI
@@ -79,5 +90,13 @@ private:
 	//time to reach the target
 	float m_timeToTarget;
 	float m_distToArrive;
+	float m_wanderAngle;
+
+	float m_wanderOffset;
+	float m_wanderRadius;
+	float m_wanderRate;
+	float m_wanderOrientation;
+	float m_maxAcc;
+	Steering m_steering;
 };
 

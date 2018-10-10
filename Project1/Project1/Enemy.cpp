@@ -1,8 +1,10 @@
 #include "Enemy.h"
 
-const float Enemy::s_MAX_SPEED = 10.0f;
+const float Enemy::s_MAX_SPEED = 6.0f;
 const float Enemy::s_PI = 3.14159;
-const float Enemy::s_MAX_ROTATION = 0.1f;
+const float Enemy::s_MAX_ROTATION = 1.0f;
+const float Enemy::s_DEG_TO_RAD = Enemy::s_PI / 180;
+const float Enemy::s_RAD_TO_DEG = 180 / Enemy::s_PI;
 
 /// <summary>
 /// Default constructor
@@ -26,8 +28,15 @@ Enemy::Enemy(sf::Texture & texture)
 	, m_speed(0.0f)
 	, m_timeToTarget(0.25f)
 	, m_distToArrive(100.0f)
+	, m_wanderAngle(0.0f)
+	, m_wanderOffset(100.0f)
+	, m_wanderRadius(25.0f)
+	, m_wanderRate(2.0f)
+	, m_wanderOrientation(0.0f)
+	, m_maxAcc(0.07f)
 {
-
+	m_steering.angularVel = 0;
+	m_steering.linearVel = sf::Vector2f(0.0f,0.0f);
 	m_sprite.setPosition(m_position);
 	m_sprite.setOrigin(m_sprite.getTextureRect().width / 2, m_sprite.getTextureRect().height / 2);
 	m_sprite.setScale(0.3f, 0.3f);
@@ -53,7 +62,7 @@ void Enemy::update(float dt)
 	borderCollision();
 	m_sprite.setPosition(m_position.x, m_position.y);
 	move(dt);
-	m_sprite.setRotation(atan2(m_velocity.y, m_velocity.x) * (180/ s_PI) + 90);
+	m_sprite.setRotation(m_orientation + 180);
 }
 
 /// <summary>
@@ -185,13 +194,30 @@ void Enemy::move(float dt)
 
 void Enemy::wander()
 {
-	auto vecToTarget = m_targetPos - m_position;
-	vecToTarget = normalizeVec(vecToTarget);
-	m_orientation = getNewOrientation(m_orientation, vecToTarget);
-	float random = rand() % 200 - 100;
-	m_orientation += s_MAX_ROTATION * (random / 100);
+	//m_velocity = m_targetPos - m_position;
+	//m_velocity = normalizeVec(m_velocity);
+	//m_orientation = getNewOrientation(m_orientation, m_velocity);
+	//float random = rand() % 200 - 100;
+	//std::cout << random / 100 << std::endl;
+	//m_orientation += s_MAX_ROTATION * (random / 100);
+	
+	//m_velocity = sf::Vector2f(-sin(m_orientation * (s_PI / 180)), cos(m_orientation * (s_PI / 180))) * s_MAX_SPEED;
+	//m_velocity = m_targetPos - m_position;
 
-	m_velocity = sf::Vector2f(-sin(m_orientation), cos(m_orientation)) * s_MAX_SPEED;
+
+	//This is my version of wander
+	//auto circleCenterVector = normalizeVec(m_velocity) * 50.0f;
+	//auto displacementVector = sf::Vector2f(0, -1) * 1.0f;
+	//float random = rand() % 20 - 10;
+	//setVectorAngle(displacementVector, m_wanderAngle);
+	//m_wanderAngle += (random * s_MAX_ROTATION) - (s_MAX_ROTATION * 0.5f);
+	//auto wanderForce = circleCenterVector + displacementVector;
+	//m_velocity = normalizeVec(wanderForce + m_velocity) * s_MAX_SPEED;
+	//m_orientation = getNewOrientation(m_orientation, m_velocity);
+
+	m_steering.linearVel = getWanderSteering().linearVel;
+	m_velocity = normalizeVec( m_velocity + m_steering.linearVel) * s_MAX_SPEED;
+	m_orientation = getNewOrientation(m_orientation, m_velocity);
 }
 
 void Enemy::seek()
@@ -202,6 +228,9 @@ void Enemy::seek()
 		m_velocity = m_targetPos - m_position;
 		m_velocity = normalizeVec(m_velocity);
 		m_velocity = m_velocity * s_MAX_SPEED;
+
+
+
 		m_orientation = getNewOrientation(m_orientation, m_velocity);
 	}
 	else
@@ -209,27 +238,27 @@ void Enemy::seek()
 		m_ai = AI::Arrive;
 	}
 
-
 }
 
 void Enemy::flee()
 {
 	m_velocity =  m_position - m_targetPos;
 	m_velocity = normalizeVec(m_velocity);
-	m_velocity = m_velocity * s_MAX_SPEED;
+	m_velocity = m_velocity * (s_MAX_SPEED / 3);
 	m_orientation = getNewOrientation(m_orientation, m_velocity);
 }
 
 void Enemy::arrive()
 {
 	m_velocity = m_targetPos - m_position;
-	if (!lengthVec(m_velocity) < 90.0f)
+	if (!lengthVec(m_velocity) < m_distToArrive)
 	{
 		m_velocity /= m_timeToTarget;
 		if (lengthVec(m_velocity) > s_MAX_SPEED)
 		{
 			m_velocity = normalizeVec(m_velocity);
 			m_velocity *= s_MAX_SPEED;
+			m_orientation = getNewOrientation(m_orientation, m_velocity);
 		}
 	}
 	else
@@ -247,7 +276,7 @@ float Enemy::getNewOrientation(float currentOrientation, sf::Vector2f vel)
 {
 	if (lengthVec(vel) > 0)
 	{
-		return (atan2(-m_position.y, m_position.x)) * 180 / s_PI;
+		return (atan2(-vel.x, vel.y)) * (180 / s_PI);
 	}
 	else
 	{
@@ -270,6 +299,54 @@ sf::Vector2f Enemy::normalizeVec(sf::Vector2f vec)
 float Enemy::lengthVec(sf::Vector2f vec)
 {
 	return sqrt((vec.x * vec.x) + (vec.y * vec.y));
+}
+
+void Enemy::setVectorAngle(sf::Vector2f& vector, float radians)
+{
+	float len = lengthVec(vector);
+	vector.x = cos(radians) * len;
+	vector.y = sin(radians) * len;
+}
+
+Steering Enemy::getWanderSteering()
+{
+	struct Steering newSteering;
+
+	float random = rand() % 200 - 100;
+	random /= 100;
+	if (random >= 0)
+	{
+		random = 1;
+	}
+	else
+	{
+		random = -1;
+	}
+	m_wanderOrientation += (random * m_wanderRate);
+	auto targetOrientation = m_wanderOrientation + m_orientation;
+
+	auto target = m_position + (m_wanderOffset * sf::Vector2f(std::cos(m_orientation ), std::sin(m_orientation )));
+	target += m_wanderRadius * sf::Vector2f(std::cos(targetOrientation ), std::sin(targetOrientation ));
+	m_orientation = getNewOrientation(targetOrientation, target);
+	newSteering.linearVel = m_maxAcc * sf::Vector2f(std::cos(m_orientation ), std::sin(m_orientation ));
+	return newSteering;
+	
+	
+	//auto circleCenter = m_velocity;
+	//normalizeVec(circleCenter);
+	//circleCenter *= m_wanderOffset;
+
+	//auto displacement = sf::Vector2f(0, -1);
+	//displacement *= m_wanderRadius;
+
+	//setVectorAngle(displacement, m_wanderAngle);
+
+	//float random = rand() % 200 - 100;
+	//random /= 100;
+	//m_wanderAngle += (random * s_MAX_ROTATION) * (s_MAX_ROTATION * .5f);
+	//std::cout << m_wanderAngle << std::endl;
+	//auto wanderForce = circleCenter + displacement;
+	//return wanderForce;
 }
 
 

@@ -37,7 +37,11 @@ private:
 	TextureHolder m_textures;
 	//the key handler to handle inputs
 	KeyHandler m_keyHandler;
-
-
+	//Seeking enemy
+	std::unique_ptr<Enemy> m_enemySeek;
+	//Fleeing enemy
+	std::unique_ptr<Enemy> m_enemyFlee;
+	//a vector of unique pointers to enemies
+	std::vector<std::unique_ptr<Enemy>> m_enemies;
 };
 

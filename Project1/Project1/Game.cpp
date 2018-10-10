@@ -28,8 +28,13 @@ void Game::init()
 	m_textures.load(Textures::Player, "assets/player.png");
 	m_textures.load(Textures::Enemy, "assets/enemy.png");
 	m_player = std::unique_ptr<Player>(new Player(m_textures.get(Textures::Player),m_keyHandler));
-	m_enemy = std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy)));
-	m_enemy->setAIState(Enemy::AI::Wander);
+	//set up the 3 AI's to be in the vector and give each a different state
+	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	//m_enemies.back()->setAIState(Enemy::AI::Flee);
+	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	//m_enemies.back()->setAIState(Enemy::AI::Seek);
+	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	m_enemies.back()->setAIState(Enemy::AI::Wander);
 	loop();
 }
 
@@ -89,8 +94,13 @@ void Game::loop()
 void Game::update(float dt)
 {
 	m_player->update(dt);
-	m_enemy->setTargetPos(m_player->getPos());
-	m_enemy->update(dt);
+	//m_enemy->setTargetPos(m_player->getPos());
+	//m_enemy->update(dt);
+	for (const auto & enemy : m_enemies)
+	{
+		enemy->setTargetPos(m_player->getPos());
+		enemy->update(dt);
+	}
 	m_keyHandler.update();
 }
 
@@ -104,6 +114,10 @@ void Game::draw()
 		m_window.clear();
 
 		m_player->draw(m_window);
-		m_enemy->draw(m_window);
+		//m_enemy->draw(m_window);
+		for (const auto & enemy : m_enemies)
+		{
+			enemy->draw(m_window);
+		}
 		m_window.display();
 }
