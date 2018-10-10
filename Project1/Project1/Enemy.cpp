@@ -1,6 +1,5 @@
 #include "Enemy.h"
 
-const float Enemy::s_MAX_SPEED = 6.0f;
 const float Enemy::s_PI = 3.14159;
 const float Enemy::s_MAX_ROTATION = 1.0f;
 const float Enemy::s_DEG_TO_RAD = Enemy::s_PI / 180;
@@ -23,24 +22,29 @@ Enemy::Enemy()
 Enemy::Enemy(sf::Texture & texture)
 	: m_sprite(texture)
 	, m_velocity(0.4f, 0.2f)
-	, m_position(200.0f,200.0f)
+	, m_position(200.0f, 200.0f)
 	, m_orientation(0.0f)
 	, m_speed(0.0f)
 	, m_timeToTarget(0.25f)
 	, m_distToArrive(100.0f)
+	, m_distToSlow(200.0f)
 	, m_wanderAngle(0.0f)
 	, m_wanderOffset(100.0f)
 	, m_wanderRadius(25.0f)
 	, m_wanderRate(2.0f)
 	, m_wanderOrientation(0.0f)
-	, m_maxAcc(0.07f)
+	, m_maxAcc(1.0f)
+	, m_rotation(0.0f)
+	, m_maxSpeed(6.0f)
+	, m_maxTimePrediction(10.0f)
 {
 	m_steering.angularVel = 0;
 	m_steering.linearVel = sf::Vector2f(0.0f,0.0f);
 	m_sprite.setPosition(m_position);
 	m_sprite.setOrigin(m_sprite.getTextureRect().width / 2, m_sprite.getTextureRect().height / 2);
-	m_sprite.setScale(0.3f, 0.3f);
-
+	m_sprite.setScale(0.2f, 0.2f);
+	m_targetCircle.setFillColor(sf::Color::Red);
+	m_targetCircle.setRadius(10.0f);
 }
 
 /// <summary>
@@ -62,6 +66,8 @@ void Enemy::update(float dt)
 	borderCollision();
 	m_sprite.setPosition(m_position.x, m_position.y);
 	move(dt);
+	m_targetCircle.setPosition(m_targetPos);
+
 	m_sprite.setRotation(m_orientation + 180);
 }
 
@@ -77,6 +83,7 @@ void Enemy::draw(sf::RenderWindow & window)
 	{
 		window.draw(m_sprite);
 	}
+	window.draw(m_targetCircle);
 }
 
 /// <summary>
@@ -103,9 +110,11 @@ void Enemy::setPos(sf::Vector2f pos)
 /// Sets the target position to be the passed in position
 /// </summary>
 /// <param name="targetPos">new target position as vector2f</param>
-void Enemy::setTargetPos(sf::Vector2f targetPos)
+void Enemy::setTarget(sf::Vector2f targetPos, sf::Vector2f targetVel, float orientation)
 {
 	m_targetPos = targetPos;
+	m_targetVel = targetVel;
+	m_targetOrientation = orientation;
 }
 
 /// <summary>
@@ -182,14 +191,36 @@ void Enemy::move(float dt)
 	case Enemy::AI::Arrive:
 		arrive();
 		break;
+	case Enemy::AI::Pursue:
+		pursue();
+		break;
 	default:
 		float angle = m_rotation * (s_PI / 180);
 		sf::Vector2f direction(cos(angle), sin(angle));
 		m_velocity = m_speed * direction;
 		break;
 	}
-	m_position += m_velocity * dt;
-	
+
+
+	//m_position += m_velocity * dt;
+	m_velocity = m_velocity + m_steering.linearVel * dt;
+	m_rotation = m_rotation + m_steering.angularVel * dt;
+	if (lengthVec(m_velocity) > m_maxSpeed)
+	{
+		m_velocity = normalizeVec(m_velocity);
+		m_velocity = m_velocity * m_maxSpeed;
+	}
+	if (m_rotation > s_MAX_ROTATION)
+	{
+		m_rotation = s_MAX_ROTATION;
+	}
+	else if (-m_rotation > s_MAX_ROTATION)
+	{
+		m_rotation = -s_MAX_ROTATION;
+	}
+	m_position = m_position + m_velocity * dt;
+	m_orientation = m_orientation + m_rotation * dt;
+    m_orientation = getNewOrientation(m_orientation, m_velocity);
 }
 
 void Enemy::wander()
@@ -215,56 +246,96 @@ void Enemy::wander()
 	//m_velocity = normalizeVec(wanderForce + m_velocity) * s_MAX_SPEED;
 	//m_orientation = getNewOrientation(m_orientation, m_velocity);
 
-	m_steering.linearVel = getWanderSteering().linearVel;
-	m_velocity = normalizeVec( m_velocity + m_steering.linearVel) * s_MAX_SPEED;
-	m_orientation = getNewOrientation(m_orientation, m_velocity);
+	m_steering = getWanderSteering();
+	//m_velocity = normalizeVec( m_velocity + m_steering.linearVel) * s_MAX_SPEED;
+	//m_orientation = getNewOrientation(m_orientation, m_velocity);
 }
 
 void Enemy::seek()
 {
-	auto vecToTarget = m_targetPos - m_position;
-	if (lengthVec(vecToTarget) > m_distToArrive)
-	{
-		m_velocity = m_targetPos - m_position;
-		m_velocity = normalizeVec(m_velocity);
-		m_velocity = m_velocity * s_MAX_SPEED;
-
-
-
-		m_orientation = getNewOrientation(m_orientation, m_velocity);
-	}
-	else
-	{
-		m_ai = AI::Arrive;
-	}
+	//auto vecToTarget = m_targetPos - m_position;
+	//if (lengthVec(vecToTarget) > m_distToArrive)
+	//{
+	//	m_velocity = m_targetPos - m_position;
+	//	m_velocity = normalizeVec(m_velocity);
+	//	m_velocity = m_velocity * s_MAX_SPEED;
+	//	m_orientation = getNewOrientation(m_orientation, m_velocity);
+	//}
+	//else
+	//{
+	//	m_ai = AI::Arrive;
+	//}
+	m_steering.linearVel = m_targetPos - m_position;
+	m_velocity = normalizeVec(m_steering.linearVel);
+	m_steering.linearVel *= m_maxAcc;
+	m_steering.angularVel = 0;
 
 }
 
 void Enemy::flee()
 {
-	m_velocity =  m_position - m_targetPos;
-	m_velocity = normalizeVec(m_velocity);
-	m_velocity = m_velocity * (s_MAX_SPEED / 3);
-	m_orientation = getNewOrientation(m_orientation, m_velocity);
+	m_steering.linearVel = m_position - m_targetPos;
+	m_velocity = normalizeVec(m_steering.linearVel);
+	m_steering.linearVel *= m_maxAcc;
+	m_steering.angularVel = 0;
 }
 
 void Enemy::arrive()
 {
-	m_velocity = m_targetPos - m_position;
-	if (!lengthVec(m_velocity) < m_distToArrive)
+	float targetSpeed = 0;
+	sf::Vector2f direction = m_targetPos - m_position;
+	float distance = lengthVec(direction);
+	//set speed
+	if (distance < m_distToArrive)
 	{
-		m_velocity /= m_timeToTarget;
-		if (lengthVec(m_velocity) > s_MAX_SPEED)
-		{
-			m_velocity = normalizeVec(m_velocity);
-			m_velocity *= s_MAX_SPEED;
-			m_orientation = getNewOrientation(m_orientation, m_velocity);
-		}
+		float targetSpeed = 0.0f;
+	}
+	else if (distance > m_distToSlow)
+	{
+		targetSpeed = m_maxSpeed;
 	}
 	else
 	{
-		m_ai = AI::Seek;
+		targetSpeed = m_maxSpeed * (distance / m_distToSlow);
 	}
+	//now set the velocity (speed and direction)
+	sf::Vector2f targetVelocity = direction;
+	targetVelocity = normalizeVec(targetVelocity);
+	targetVelocity *= targetSpeed;
+
+	float timeToTarget = 0.1f;
+
+	m_steering.linearVel = targetVelocity - m_velocity;
+	m_steering.linearVel /= timeToTarget;
+	//Check if too fast
+	if (lengthVec(m_steering.linearVel) > m_maxAcc)
+	{
+		m_steering.linearVel = normalizeVec(m_steering.linearVel);
+		m_steering.linearVel *= m_maxAcc;
+	}
+	m_steering.angularVel = 0;
+}
+
+/// <summary>
+/// Pursue behaviour of the AI
+/// 
+/// </summary>
+void Enemy::pursue()
+{
+	sf::Vector2f direction = m_targetPos - m_position;
+	float distance = lengthVec(direction);
+	float speed = lengthVec(m_velocity);
+	float timePrediction = 0;
+	if (speed <= distance / m_maxTimePrediction)
+	{
+		timePrediction = m_maxTimePrediction;
+	}
+	else
+	{
+		timePrediction = distance / speed;
+	}
+	m_targetPos = m_targetPos + m_targetVel * timePrediction;
+	seek();
 }
 
 void Enemy::setAIState(AI state)
@@ -325,10 +396,10 @@ Steering Enemy::getWanderSteering()
 	m_wanderOrientation += (random * m_wanderRate);
 	auto targetOrientation = m_wanderOrientation + m_orientation;
 
-	auto target = m_position + (m_wanderOffset * sf::Vector2f(std::cos(m_orientation ), std::sin(m_orientation )));
-	target += m_wanderRadius * sf::Vector2f(std::cos(targetOrientation ), std::sin(targetOrientation ));
-	m_orientation = getNewOrientation(targetOrientation, target);
-	newSteering.linearVel = m_maxAcc * sf::Vector2f(std::cos(m_orientation ), std::sin(m_orientation ));
+	auto target = m_position + (m_wanderOffset * sf::Vector2f(std::cos(m_orientation * s_DEG_TO_RAD), std::sin(m_orientation * s_DEG_TO_RAD)));
+	target += m_wanderRadius * sf::Vector2f(std::cos(targetOrientation * s_DEG_TO_RAD), std::sin(targetOrientation * s_DEG_TO_RAD));
+	m_orientation = getNewOrientation(m_orientation, target);
+	newSteering.linearVel = m_maxAcc * sf::Vector2f(std::cos(m_orientation * s_DEG_TO_RAD), std::sin(m_orientation * s_DEG_TO_RAD));
 	return newSteering;
 	
 	
@@ -347,6 +418,17 @@ Steering Enemy::getWanderSteering()
 	//std::cout << m_wanderAngle << std::endl;
 	//auto wanderForce = circleCenter + displacement;
 	//return wanderForce;
+}
+
+
+void Enemy::setMaxSpeed(float newMaxSpeed)
+{
+	m_maxSpeed = newMaxSpeed;
+}
+
+void Enemy::setMaxAcc(float newMaxAcc)
+{
+	m_maxAcc = newMaxAcc;
 }
 
 

@@ -31,10 +31,12 @@ void Game::init()
 	//set up the 3 AI's to be in the vector and give each a different state
 	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
 	//m_enemies.back()->setAIState(Enemy::AI::Flee);
-	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
-	//m_enemies.back()->setAIState(Enemy::AI::Seek);
 	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
-	m_enemies.back()->setAIState(Enemy::AI::Wander);
+	m_enemies.back()->setAIState(Enemy::AI::Pursue);
+	m_enemies.back()->setMaxSpeed(20.0f);
+	m_enemies.back()->setMaxAcc(20.0f);
+	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	//m_enemies.back()->setAIState(Enemy::AI::Arrive);
 	loop();
 }
 
@@ -98,7 +100,7 @@ void Game::update(float dt)
 	//m_enemy->update(dt);
 	for (const auto & enemy : m_enemies)
 	{
-		enemy->setTargetPos(m_player->getPos());
+		enemy->setTarget(m_player->getPos(), m_player->getVel(), m_player->getOrientation());
 		enemy->update(dt);
 	}
 	m_keyHandler.update();

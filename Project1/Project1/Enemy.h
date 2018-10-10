@@ -17,7 +17,7 @@ class Enemy
 {
 
 public:
-	enum class AI {Wander,Seek,Flee,Arrive};
+	enum class AI {Wander,Seek,Flee,Arrive, Pursue};
 	//default constructor
 	Enemy();
 	//overloaded constructor
@@ -33,7 +33,7 @@ public:
 	//setter for position
 	void setPos(sf::Vector2f pos);
 	//setter for target position
-	void setTargetPos(sf::Vector2f targetPos);
+	void setTarget(sf::Vector2f targetPos, sf::Vector2f targetVel, float orientation);
 	//change velocity by passed value
 	void changeVel(sf::Vector2f vel);
 	//getter for width of the sprite
@@ -52,6 +52,8 @@ public:
 	void flee();
 	//Arrive at target AI logic
 	void arrive();
+	//pursue target AI logic
+	void pursue();
 	//set the ai state to be different
 	void setAIState(AI state);
 	//gets new orientation
@@ -60,6 +62,8 @@ public:
 	float lengthVec(sf::Vector2f vec);
 	void setVectorAngle(sf::Vector2f& vector, float radians);
 	Steering getWanderSteering();
+	void setMaxSpeed(float newMaxSpeed);
+	void setMaxAcc(float newMaxAcc);
 private:
 	//velocity
 	sf::Vector2f m_velocity;
@@ -68,7 +72,7 @@ private:
 	//position
 	sf::Vector2f m_position;
 	//max velocity of the sprite
-	static const float s_MAX_SPEED;
+	float m_maxSpeed;
 	//angle in which sprite is facing
 	float m_rotation;
 	//angle in which sprite is facing
@@ -87,9 +91,12 @@ private:
 	AI m_ai;
 	//target position of the AI
 	sf::Vector2f m_targetPos;
+	sf::Vector2f m_targetVel;
+	float m_targetOrientation;
 	//time to reach the target
 	float m_timeToTarget;
 	float m_distToArrive;
+	float m_distToSlow;
 	float m_wanderAngle;
 
 	float m_wanderOffset;
@@ -98,5 +105,8 @@ private:
 	float m_wanderOrientation;
 	float m_maxAcc;
 	Steering m_steering;
+
+	float m_maxTimePrediction;
+	sf::CircleShape m_targetCircle;
 };
 

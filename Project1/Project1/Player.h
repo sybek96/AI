@@ -25,6 +25,7 @@ public:
 	void setPos(sf::Vector2f pos);
 	//method to alter the velocity by passed value
 	void changeVel(sf::Vector2f vel);
+	sf::Vector2f getVel();
 	//getter for width of the sprite
 	float getWidth();
 	//getter for the height of the sprite
@@ -41,6 +42,7 @@ public:
 	void rotateRight();
 	//rotating left
 	void rotateLeft();
+	float getOrientation();
 	//this will calculate the movement to be done
 	void move(float dt);
 private:

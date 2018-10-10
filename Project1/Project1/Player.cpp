@@ -28,7 +28,7 @@ Player::Player(sf::Texture& texture, KeyHandler& keyHandler)
 	m_sprite.setTexture(texture);
 	m_sprite.setPosition(m_position);
 	m_sprite.setOrigin(m_sprite.getTextureRect().width / 2, m_sprite.getTextureRect().height / 2);
-	m_sprite.setScale(0.5f, 0.5f);
+	m_sprite.setScale(0.3f, 0.3f);
 }
 
 /// <summary>
@@ -102,6 +102,11 @@ void Player::changeVel(sf::Vector2f vel)
 	{
 		m_velocity += vel;
 	}
+}
+
+sf::Vector2f Player::getVel()
+{
+	return m_velocity;
 }
 
 /// <summary>
@@ -215,6 +220,11 @@ void Player::rotateLeft()
 	{
 		m_rotation = 360;
 	}
+}
+
+float Player::getOrientation()
+{
+	return m_rotation;
 }
 
 /// <summary>
