@@ -30,8 +30,8 @@ Enemy::Enemy(sf::Texture & texture)
 	, m_distToSlow(200.0f)
 	, m_wanderAngle(0.0f)
 	, m_wanderOffset(100.0f)
-	, m_wanderRadius(25.0f)
-	, m_wanderRate(2.0f)
+	, m_wanderRadius(50.0f)
+	, m_wanderRate(1.0f)
 	, m_wanderOrientation(0.0f)
 	, m_maxAcc(1.0f)
 	, m_rotation(0.0f)
@@ -83,7 +83,7 @@ void Enemy::draw(sf::RenderWindow & window)
 	{
 		window.draw(m_sprite);
 	}
-	window.draw(m_targetCircle);
+	//window.draw(m_targetCircle);
 }
 
 /// <summary>
@@ -247,8 +247,6 @@ void Enemy::wander()
 	//m_orientation = getNewOrientation(m_orientation, m_velocity);
 
 	m_steering = getWanderSteering();
-	//m_velocity = normalizeVec( m_velocity + m_steering.linearVel) * s_MAX_SPEED;
-	//m_orientation = getNewOrientation(m_orientation, m_velocity);
 }
 
 void Enemy::seek()
@@ -396,10 +394,11 @@ Steering Enemy::getWanderSteering()
 	m_wanderOrientation += (random * m_wanderRate);
 	auto targetOrientation = m_wanderOrientation + m_orientation;
 
-	auto target = m_position + (m_wanderOffset * sf::Vector2f(std::cos(m_orientation * s_DEG_TO_RAD), std::sin(m_orientation * s_DEG_TO_RAD)));
-	target += m_wanderRadius * sf::Vector2f(std::cos(targetOrientation * s_DEG_TO_RAD), std::sin(targetOrientation * s_DEG_TO_RAD));
-	m_orientation = getNewOrientation(m_orientation, target);
-	newSteering.linearVel = m_maxAcc * sf::Vector2f(std::cos(m_orientation * s_DEG_TO_RAD), std::sin(m_orientation * s_DEG_TO_RAD));
+	m_targetPos = m_position + (m_wanderOffset * sf::Vector2f(std::cos(m_orientation * s_DEG_TO_RAD), -std::sin(m_orientation * s_DEG_TO_RAD)));
+	m_targetPos += m_wanderRadius * sf::Vector2f(std::cos(targetOrientation * s_DEG_TO_RAD), -std::sin(targetOrientation * s_DEG_TO_RAD));
+	m_orientation = getNewOrientation(m_orientation, m_position);
+	newSteering.linearVel = m_maxAcc * sf::Vector2f(std::cos(targetOrientation* s_DEG_TO_RAD), -std::sin(targetOrientation * s_DEG_TO_RAD));
+	//seek();
 	return newSteering;
 	
 	

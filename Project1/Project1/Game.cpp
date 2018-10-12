@@ -29,14 +29,21 @@ void Game::init()
 	m_textures.load(Textures::Enemy, "assets/enemy.png");
 	m_player = std::unique_ptr<Player>(new Player(m_textures.get(Textures::Player),m_keyHandler));
 	//set up the 3 AI's to be in the vector and give each a different state
-	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
-	//m_enemies.back()->setAIState(Enemy::AI::Flee);
+	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	m_enemies.back()->setAIState(Enemy::AI::Wander);
+	m_enemies.back()->setMaxSpeed(20.0f);
+	m_enemies.back()->setMaxAcc(20.0f);
+	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	m_enemies.back()->setAIState(Enemy::AI::Seek);
+	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	m_enemies.back()->setAIState(Enemy::AI::Arrive);
+	m_enemies.back()->setMaxSpeed(10.0f);
+	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
+	m_enemies.back()->setAIState(Enemy::AI::Arrive);
 	m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
 	m_enemies.back()->setAIState(Enemy::AI::Pursue);
 	m_enemies.back()->setMaxSpeed(20.0f);
 	m_enemies.back()->setMaxAcc(20.0f);
-	//m_enemies.push_back(std::unique_ptr<Enemy>(new Enemy(m_textures.get(Textures::Enemy))));
-	//m_enemies.back()->setAIState(Enemy::AI::Arrive);
 	loop();
 }
 
