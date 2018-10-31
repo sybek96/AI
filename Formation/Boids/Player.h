@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "Window.h"
 #include "KeyHandler.h"
+
 ///
 /// Player class is the player that is controlled by the user
 /// 

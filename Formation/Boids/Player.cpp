@@ -3,6 +3,14 @@
 const float Player::s_MAX_SPEED = 30.0f;
 const float Player::s_PI = 3.14159;
 const float Player::s_MAX_ROTATION = 0.1f;
+
+sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+const int window_height = desktop.height;
+const int window_width = desktop.width;
+
+#define w_height window_height
+#define w_width window_width
+
 /// <summary>
 /// Default constructor
 /// 
@@ -132,22 +140,22 @@ float Player::getHeight()
 /// </summary>
 void Player::borderCollision()
 {
-	if (m_position.x - (getWidth() /2) > Window::WIDTH) //if reach right border (divide widths and heights by 2 because origin is in centre of rect)
+	if (m_position.x - (getWidth() /2) > window_width) //if reach right border (divide widths and heights by 2 because origin is in centre of rect)
 	{
 		setPos(sf::Vector2f(-(getWidth()/2), m_position.y));
 	}
 	else if (m_position.x + (getWidth()/2) < 0) //if reach left border
 	{
-		setPos(sf::Vector2f(Window::WIDTH + (getWidth()/2), m_position.y));
+		setPos(sf::Vector2f(window_width + (getWidth()/2), m_position.y));
 	}
 
-	if (m_position.y - (getHeight()/2) > Window::HEIGHT) //if reach bottom
+	if (m_position.y - (getHeight()/2) > window_height) //if reach bottom
 	{
 		setPos(sf::Vector2f(m_position.x, -getHeight()));
 	}
 	else if (m_position.y + getHeight() < 0) //if reach top
 	{
-		setPos(sf::Vector2f(m_position.x, Window::HEIGHT + (getHeight()/2)));
+		setPos(sf::Vector2f(m_position.x, window_height + (getHeight()/2)));
 	}
 }
 

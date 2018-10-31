@@ -72,29 +72,29 @@ void Flock::cFormation(Player& fLeader)
 		Pvector targetSlot(0, 0);
 		Player target = fLeader; // Our designated leader
 		
-			angleAroundCircle = (float) formationNumber / (4);
-			angleAroundCircle = angleAroundCircle * pi * 2 + variedCFormationAngle;
-			float radius = npcRadius / sin(pi / (fSize));
+		angleAroundCircle = (float) formationNumber / (4);
+		angleAroundCircle = angleAroundCircle * pi * 2 + variedCFormationAngle;
+		float radius = npcRadius / sin(pi / (fSize));
 
-			targetSlot = Pvector(target.getPos().x, target.getPos().y);
-			targetSlot.x = targetSlot.x + radius * cos(angleAroundCircle);
-			targetSlot.y = targetSlot.y + radius * sin(angleAroundCircle);
-			sub = sub.subTwoVector(targetSlot, flock[i].location);
-			float D = sub.magnitude();
-			if (D > closeEnough)
-			{
-				sum = sub;
-				sum.normalize();
-				sum.mulScalar(flock[i].maxSpeed);
-				flock[i].applyForce(sum);
-				flock[i].update();
-				flock[i].borders();
-			}
-			else
-			{
-				flock[i].velocity = Pvector(target.getVel().x, target.getVel().y); //Match the leader's velocity if we are close enough
-			}
-			formationNumber++;
+		targetSlot = Pvector(target.getPos().x, target.getPos().y);
+		targetSlot.x = targetSlot.x + radius * cos(angleAroundCircle);
+		targetSlot.y = targetSlot.y + radius * sin(angleAroundCircle);
+		sub = sub.subTwoVector(targetSlot, flock[i].location);
+		float D = sub.magnitude();
+		if (D > closeEnough)
+		{
+			sum = sub;
+			sum.normalize();
+			sum.mulScalar(flock[i].maxSpeed);
+			flock[i].applyForce(sum);
+			flock[i].update();
+			flock[i].borders();
 		}
+		else
+		{
+			flock[i].velocity = Pvector(target.getVel().x, target.getVel().y); //Match the leader's velocity if we are close enough
+		}
+		formationNumber++;
+	}
 	
 }
