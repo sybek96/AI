@@ -11,6 +11,11 @@ static double const S_PER_UPDATE = 0.01;
 Game::Game() :
 	m_window(sf::VideoMode(750, 850), "AI lab")
 {
+	if (!font.loadFromFile("BERNHC.TTF"))
+	{
+		std::cout << "could not load font" << std::endl;
+	}
+
 }
 
 /// <summary>
@@ -38,6 +43,9 @@ void Game::init()
 				});
 		}
 	}
+
+	createObstacles();
+
 	for (int i = 0; i < gameGrid.size(); i++)
 	{
 		m_pathFinding.addCell(&gameGrid[i].cell); //add address of cell to the pathfinder
@@ -56,6 +64,7 @@ void Game::init()
 	//m_pathFinding.FindPath(Vector2D(40, 14), Vector2D(60, 60));
 	for (auto & grid : gameGrid)
 	{
+		grid.cell.G = 99999;
 		if (grid.cell.isStart)
 		{
 			grid.originalColor = sf::Color::Green;
@@ -64,10 +73,23 @@ void Game::init()
 		{
 			grid.originalColor = sf::Color::Red;
 		}
+		if (grid.cell.blocked)
+		{
+			grid.originalColor = sf::Color::Cyan;
+		}
 		grid.rect.setFillColor(grid.originalColor);
 	}
 	m_pathFinding.createAdjecancySets();
 	m_pathFinding.wavefrontAlgorithm();
+	for (auto& gameCell : gameGrid)
+	{
+		gameCell.costLabel.setFont(font);
+		gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.G)));
+		gameCell.costLabel.setPosition(sf::Vector2f(gameCell.cell.m_xCoord, gameCell.cell.m_yCoord));
+		gameCell.costLabel.setCharacterSize(10);
+		//gameCell.costLabel.setScale(0.4, 0.4);
+		gameCell.costLabel.setFillColor(sf::Color::Black);
+	}
 	loop();
 }
 
@@ -116,6 +138,23 @@ void Game::loop()
 							m_mousePos.y <= cell.rect.getPosition().y + cell.rect.getGlobalBounds().height)
 						{    // above the bottom
 							m_pathFinding.updateGoal(&cell.cell);
+							//Check if any obstacles were created since last left click
+							//if yes we must recreate the adjecancy set
+							if (recreateAdjecancySet)
+							{
+								m_pathFinding.createAdjecancySets();
+								recreateAdjecancySet = false;
+							}
+							m_pathFinding.wavefrontAlgorithm();
+							if (cell.cell.blocked)
+							{
+								recreateAdjecancySet = true; //if player user makes goal on obstacle recreate adjecancy set
+								cell.cell.blocked = false;
+							}
+							for (auto& gameCell : gameGrid)
+							{
+								gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.G)));
+							}
 						}
 						//for (auto & grid : gameGrid)
 						//{
@@ -129,22 +168,60 @@ void Game::loop()
 						//	}
 						//}
 					}
-					for (auto & grid : gameGrid)
+
+				}
+				else if (event.key.code == sf::Mouse::Button::Right)
+				{
+					m_mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition(m_window));
+					for (auto & cell : gameGrid)
 					{
-						if (grid.cell.isGoal)
-						{
-							grid.originalColor = sf::Color::Red;
+						if (m_mousePos.x >= cell.rect.getPosition().x &&         // right of the left edge AND
+							m_mousePos.x <= cell.rect.getPosition().x + cell.rect.getGlobalBounds().width &&    // left of the right edge AND
+							m_mousePos.y >= cell.rect.getPosition().y &&         // below the top AND
+							m_mousePos.y <= cell.rect.getPosition().y + cell.rect.getGlobalBounds().height)
+						{   // above the bottom
+							if (!cell.cell.blocked)
+							{
+								cell.cell.blocked = true;
+								cell.cell.G = 9999;
+								//m_pathFinding.updateGoal(&cell.cell);
+								cell.costLabel.setString(std::to_string(static_cast<int>(cell.cell.G)));
+							}
+							recreateAdjecancySet = true;
 						}
-						else if (grid.cell.isStart)
-						{
-							grid.originalColor = sf::Color::Green;
-						}
-						else
-						{
-							grid.originalColor = sf::Color::White;
-						}
-						grid.rect.setFillColor(grid.originalColor);
+						//for (auto & grid : gameGrid)
+						//{
+						//	if (grid.cell.isGoal)
+						//	{
+						//		grid.originalColor = sf::Color::Red;
+						//	}
+						//	if (grid.cell.isStart)
+						//	{
+						//		grid.originalColor = sf::Color::Green;
+						//	}
+						//}
 					}
+
+				}
+				for (auto & grid : gameGrid)
+				{
+					if (grid.cell.isGoal)
+					{
+						grid.originalColor = sf::Color::Red;
+					}
+					else if (grid.cell.isStart)
+					{
+						grid.originalColor = sf::Color::Green;
+					}
+					else if (grid.cell.blocked)
+					{
+						grid.originalColor = sf::Color::Cyan;
+					}
+					else
+					{
+						grid.originalColor = sf::Color::White;
+					}
+					grid.rect.setFillColor(grid.originalColor);
 				}
 				break;
 			}
@@ -206,6 +283,63 @@ void Game::draw()
 	for (auto & cell : gameGrid)
 	{
 		m_window.draw(cell.rect);
+		m_window.draw(cell.costLabel);
 	}
 	m_window.display();
+}
+
+void Game::createObstacles()
+{
+	//top obstacle
+	gameGrid.at(1121).cell.blocked = true;
+	gameGrid.at(1122).cell.blocked = true;
+	gameGrid.at(1123).cell.blocked = true;
+	gameGrid.at(1124).cell.blocked = true;
+	gameGrid.at(1125).cell.blocked = true;
+	gameGrid.at(1124).cell.blocked = true;
+	gameGrid.at(1123).cell.blocked = true;
+	gameGrid.at(1174).cell.blocked = true;
+	gameGrid.at(1224).cell.blocked = true;
+	gameGrid.at(1274).cell.blocked = true;
+	gameGrid.at(1324).cell.blocked = true;
+	gameGrid.at(1374).cell.blocked = true;
+	gameGrid.at(1424).cell.blocked = true;
+
+	//middle obstacle
+	gameGrid.at(123).cell.blocked = true;
+	gameGrid.at(124).cell.blocked = true;
+	gameGrid.at(125).cell.blocked = true;
+	gameGrid.at(126).cell.blocked = true;
+	gameGrid.at(127).cell.blocked = true;
+	gameGrid.at(128).cell.blocked = true;
+	gameGrid.at(129).cell.blocked = true;
+	gameGrid.at(130).cell.blocked = true;
+	gameGrid.at(131).cell.blocked = true;
+	gameGrid.at(174).cell.blocked = true;
+	gameGrid.at(224).cell.blocked = true;
+	gameGrid.at(274).cell.blocked = true;
+	gameGrid.at(324).cell.blocked = true;
+
+	//bottom obstacle
+	gameGrid.at(2124).cell.blocked = true;
+	gameGrid.at(2125).cell.blocked = true;
+	gameGrid.at(2126).cell.blocked = true;
+	gameGrid.at(2127).cell.blocked = true;
+	gameGrid.at(2128).cell.blocked = true;
+	gameGrid.at(2129).cell.blocked = true;
+	gameGrid.at(2130).cell.blocked = true;
+	gameGrid.at(2131).cell.blocked = true;
+	gameGrid.at(2174).cell.blocked = true;
+	gameGrid.at(2224).cell.blocked = true;
+	gameGrid.at(2274).cell.blocked = true;
+	gameGrid.at(2324).cell.blocked = true;
+	gameGrid.at(2325).cell.blocked = true;
+	gameGrid.at(2326).cell.blocked = true;
+	gameGrid.at(2327).cell.blocked = true;
+	gameGrid.at(2328).cell.blocked = true;	
+	gameGrid.at(2278).cell.blocked = true;
+	gameGrid.at(2228).cell.blocked = true;
+	gameGrid.at(2178).cell.blocked = true;
+
+
 }

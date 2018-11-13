@@ -3,6 +3,7 @@
 #include "Vector2D.h"
 #include "GridCell.h"
 #include <list>
+#include <iostream>
 
 class PathFinding
 {

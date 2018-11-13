@@ -30,6 +30,7 @@ public:
 	void update(float dt);
 	//draw the game elements
 	void draw();
+	void createObstacles();
 
 private:
 	//the render window object
@@ -44,9 +45,12 @@ private:
 		sf::RectangleShape rect;
 		sf::Color originalColor = sf::Color::White;
 		int m_id;
+		sf::Text costLabel;
 	};
 	std::vector<GameCell> gameGrid;
 	std::vector<sf::RectangleShape> gridRects;
 	PathFinding m_pathFinding;
+	sf::Font font;
+	bool recreateAdjecancySet = false; //we will only recreate adjecancy sets if new obstacles were added
 };
 

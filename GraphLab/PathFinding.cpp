@@ -6,6 +6,7 @@ PathFinding::PathFinding()
 {
 	m_initlizedStartGoal = false;
 	m_foundGoal = false;
+
 }
 
 
@@ -121,6 +122,7 @@ void PathFinding::wavefrontAlgorithm()
 		{
 			queue.push_back(cell);
 			cell->G = 0;
+			cell->visited = true;
 		}
 	}
 
@@ -133,14 +135,19 @@ void PathFinding::wavefrontAlgorithm()
 
 		//get all adjecant cells of the dequeued cell. If a adjecant cell was not visiter,
 		//mark it as visited and queue it.
-		for (int i = 0; i < currentCell->adjecancySet.size(); i++)
+		for (int i = 0; i < currentCell->adjecancySet.size() ; i++)
 		{
 			if (!currentCell->adjecancySet.at(i)->visited)
 			{
 				currentCell->adjecancySet.at(i)->visited = true;
 				currentCell->adjecancySet.at(i)->G = currentCell->G + 1; //previous dist + 1
 				queue.push_back(currentCell->adjecancySet.at(i));
+				std::cout << currentCell->G + 1 << std::endl;
 			}
+		}
+		if (!queue.empty())
+		{
+			currentCell = queue.front();
 		}
 	}
 	int i = 1000;
@@ -160,6 +167,7 @@ void PathFinding::createAdjecancySets()
 	for (int i = 0; i < m_openList.size(); i++)
 	{
 		auto currentCell = m_openList[i];
+		currentCell->adjecancySet.clear();
 		int x = currentCell->m_xCoord;
 		int y = currentCell->m_yCoord;
 
