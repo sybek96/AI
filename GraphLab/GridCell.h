@@ -14,7 +14,7 @@ public:
 	GridCell *parent;
 	Vector2D m_direction;
 	float G; //accumulated distance from start node
-	float H; //heuristic estimate to goald
+	float H = 99999; //heuristic estimate to goald
 	bool blocked = false;
 	bool isGoal = false;
 	bool isStart = false;

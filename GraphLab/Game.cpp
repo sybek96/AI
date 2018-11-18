@@ -15,6 +15,13 @@ Game::Game() :
 	{
 		std::cout << "could not load font" << std::endl;
 	}
+	if (!m_info.loadFromFile("info.png"))
+	{
+		std::cout << "could not load image" << std::endl;
+	}
+	m_infoSprite.setTexture(m_info);
+	m_infoSprite.setScale(0.5f, 0.5f);
+	m_infoSprite.setPosition(sf::Vector2f(0, 749));
 
 }
 
@@ -29,6 +36,8 @@ Game::~Game()
 
 void Game::init()
 {
+	lines.setPrimitiveType(sf::LinesStrip);
+	
 	srand(time(NULL));
 
 	for (int i = 0; i < 50; i++)
@@ -50,7 +59,7 @@ void Game::init()
 	{
 		m_pathFinding.addCell(&gameGrid[i].cell); //add address of cell to the pathfinder
 	}	
-	m_pathFinding.updateStart(&gameGrid.begin()->cell);
+	m_pathFinding.updateStart(&gameGrid.at(0).cell);
 	m_pathFinding.updateGoal(&(gameGrid.end() - 1)->cell);
 	//m_pathFinding.updateStartAndGoal(&gameGrid.begin()->cell, &(gameGrid.end() - 1)->cell);
 
@@ -88,8 +97,15 @@ void Game::init()
 		gameCell.costLabel.setPosition(sf::Vector2f(gameCell.cell.m_xCoord, gameCell.cell.m_yCoord));
 		gameCell.costLabel.setCharacterSize(10);
 		//gameCell.costLabel.setScale(0.4, 0.4);
-		gameCell.costLabel.setFillColor(sf::Color::Black);
+		gameCell.costLabel.setColor(sf::Color::Black);
 	}
+	
+	
+	for (int i = 0; i < m_pathFinding.m_pathToGoal.size(); i++)
+	{
+		lines.append(sf::Vertex(sf::Vector2f(m_pathFinding.m_pathToGoal.at(i)->x, m_pathFinding.m_pathToGoal.at(i)->y), sf::Color::Red));
+	}
+
 	loop();
 }
 
@@ -124,6 +140,59 @@ void Game::loop()
 				break;
 			case sf::Event::KeyReleased:
 				m_keyHandler.updateKey(event.key.code, false);
+				if (event.key.code = sf::Keyboard::Space)
+				{
+					m_mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition(m_window));
+					for (auto & cell : gameGrid)
+					{
+						if (m_mousePos.x >= cell.rect.getPosition().x &&         // right of the left edge AND
+							m_mousePos.x <= cell.rect.getPosition().x + cell.rect.getGlobalBounds().width &&    // left of the right edge AND
+							m_mousePos.y >= cell.rect.getPosition().y &&         // below the top AND
+							m_mousePos.y <= cell.rect.getPosition().y + cell.rect.getGlobalBounds().height)
+						{    // above the bottom
+							if (cell.cell.blocked)
+							{
+								recreateAdjecancySet = true; //if player user makes goal on obstacle recreate adjecancy set
+								cell.cell.blocked = false;
+							}
+							m_pathFinding.updateStart(&cell.cell);
+							//Check if any obstacles were created since last left click
+							//if yes we must recreate the adjecancy set
+							if (recreateAdjecancySet)
+							{
+								m_pathFinding.createAdjecancySets();
+								recreateAdjecancySet = false;
+							}
+							m_pathFinding.wavefrontAlgorithm();
+
+						}
+						lines.clear();
+						for (int i = 0; i < m_pathFinding.m_pathToGoal.size(); i++)
+						{
+							lines.append(sf::Vertex(sf::Vector2f(m_pathFinding.m_pathToGoal.at(i)->x, m_pathFinding.m_pathToGoal.at(i)->y), sf::Color::Red));
+						}
+					}
+					for (auto & grid : gameGrid)
+					{
+						if (grid.cell.isGoal)
+						{
+							grid.originalColor = sf::Color::Red;
+						}
+						else if (grid.cell.isStart)
+						{
+							grid.originalColor = sf::Color::Green;
+						}
+						else if (grid.cell.blocked)
+						{
+							grid.originalColor = sf::Color::Cyan;
+						}
+						else
+						{
+							grid.originalColor = sf::Color::White;
+						}
+						grid.rect.setFillColor(grid.originalColor);
+					}
+				}
 			default:
 				break;
 			case sf::Event::MouseButtonReleased:
@@ -137,6 +206,11 @@ void Game::loop()
 							m_mousePos.y >= cell.rect.getPosition().y &&         // below the top AND
 							m_mousePos.y <= cell.rect.getPosition().y + cell.rect.getGlobalBounds().height)
 						{    // above the bottom
+							if (cell.cell.blocked)
+							{
+								recreateAdjecancySet = true; //if player user makes goal on obstacle recreate adjecancy set
+								cell.cell.blocked = false;
+							}
 							m_pathFinding.updateGoal(&cell.cell);
 							//Check if any obstacles were created since last left click
 							//if yes we must recreate the adjecancy set
@@ -146,27 +220,17 @@ void Game::loop()
 								recreateAdjecancySet = false;
 							}
 							m_pathFinding.wavefrontAlgorithm();
-							if (cell.cell.blocked)
-							{
-								recreateAdjecancySet = true; //if player user makes goal on obstacle recreate adjecancy set
-								cell.cell.blocked = false;
-							}
+
 							for (auto& gameCell : gameGrid)
 							{
 								gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.G)));
 							}
 						}
-						//for (auto & grid : gameGrid)
-						//{
-						//	if (grid.cell.isGoal)
-						//	{
-						//		grid.originalColor = sf::Color::Red;
-						//	}
-						//	if (grid.cell.isStart)
-						//	{
-						//		grid.originalColor = sf::Color::Green;
-						//	}
-						//}
+						lines.clear();
+						for (int i = 0; i < m_pathFinding.m_pathToGoal.size(); i++)
+						{
+							lines.append(sf::Vertex(sf::Vector2f(m_pathFinding.m_pathToGoal.at(i)->x, m_pathFinding.m_pathToGoal.at(i)->y), sf::Color::Red));
+						}
 					}
 
 				}
@@ -189,17 +253,6 @@ void Game::loop()
 							}
 							recreateAdjecancySet = true;
 						}
-						//for (auto & grid : gameGrid)
-						//{
-						//	if (grid.cell.isGoal)
-						//	{
-						//		grid.originalColor = sf::Color::Red;
-						//	}
-						//	if (grid.cell.isStart)
-						//	{
-						//		grid.originalColor = sf::Color::Green;
-						//	}
-						//}
 					}
 
 				}
@@ -246,30 +299,8 @@ void Game::loop()
 /// </summary>
 void Game::update(float dt)
 {
-	//m_mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition(m_window));
-	//for (auto & grid : gameGrid)
-	//{
-	//	//if (m_mousePos.x >= cell.rect.getPosition().x &&         // right of the left edge AND
-	//	//	m_mousePos.x <= cell.rect.getPosition().x + cell.rect.getGlobalBounds().width &&    // left of the right edge AND
-	//	//	m_mousePos.y >= cell.rect.getPosition().y &&         // below the top AND
-	//	//	m_mousePos.y <= cell.rect.getPosition().y + cell.rect.getGlobalBounds().height) 
-	//	//{    // above the bottom
-	//	//	cell.rect.setFillColor(sf::Color( 200,  200,  200,  255));
-	//	//}
-	//	//else
-	//	//{
-	//	//	cell.rect.setFillColor(cell.originalColor);
-	//	//}
-	//	if (grid.cell.isGoal)
-	//	{
-	//		grid.originalColor = sf::Color::Green;
-	//	}
-	//	if (grid.cell.isStart)
-	//	{
-	//		grid.originalColor = sf::Color::Red;
-	//	}
-	//}
 	m_keyHandler.update();
+
 }
 
 /// <summary>
@@ -285,6 +316,9 @@ void Game::draw()
 		m_window.draw(cell.rect);
 		m_window.draw(cell.costLabel);
 	}
+	
+	m_window.draw(lines);
+	m_window.draw(m_infoSprite);
 	m_window.display();
 }
 

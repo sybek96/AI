@@ -34,7 +34,7 @@ public:
 	std::vector<GridCell*> m_openList;
 	std::vector<GridCell*> m_visitedList;
 	std::vector<Vector2D*> m_pathToGoal;
-
+	const float m_cellOffset = 7.5f;
 
 	GridCell *m_previousStartCell;
 	GridCell *m_previousGoalCell;

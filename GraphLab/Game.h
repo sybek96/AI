@@ -51,6 +51,9 @@ private:
 	std::vector<sf::RectangleShape> gridRects;
 	PathFinding m_pathFinding;
 	sf::Font font;
+	sf::VertexArray lines;
 	bool recreateAdjecancySet = false; //we will only recreate adjecancy sets if new obstacles were added
+	sf::Texture m_info;
+	sf::Sprite m_infoSprite;
 };
 
