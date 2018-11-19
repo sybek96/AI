@@ -74,22 +74,44 @@ void Game::init()
 	for (auto & grid : gameGrid)
 	{
 		grid.cell.G = 99999;
-		if (grid.cell.isStart)
-		{
-			grid.originalColor = sf::Color::Green;
-		}
+		//if (grid.cell.isStart)
+		//{
+		//	grid.originalColor = sf::Color::Green;
+		//}
+		//if (grid.cell.isGoal)
+		//{
+		//	grid.originalColor = sf::Color::Red;
+		//}
+		//if (grid.cell.blocked)
+		//{
+		//	grid.originalColor = sf::Color::Cyan;
+		//}
+		//grid.rect.setFillColor(grid.originalColor);
+	}
+
+	m_pathFinding.createAdjecancySets();
+	m_pathFinding.wavefrontAlgorithm();
+	for (auto & grid : gameGrid)
+	{
 		if (grid.cell.isGoal)
 		{
 			grid.originalColor = sf::Color::Red;
 		}
-		if (grid.cell.blocked)
+		else if (grid.cell.isStart)
+		{
+			grid.originalColor = sf::Color::Green;
+		}
+		else if (grid.cell.blocked)
 		{
 			grid.originalColor = sf::Color::Cyan;
 		}
+		else
+		{
+			grid.originalColor = sf::Color(0.0f, 0.0f, 50.0f + (grid.cell.G * 3), 255.0f);
+			//grid.originalColor = sf::Color::White;
+		}
 		grid.rect.setFillColor(grid.originalColor);
 	}
-	m_pathFinding.createAdjecancySets();
-	m_pathFinding.wavefrontAlgorithm();
 	for (auto& gameCell : gameGrid)
 	{
 		gameCell.costLabel.setFont(font);
@@ -97,7 +119,7 @@ void Game::init()
 		gameCell.costLabel.setPosition(sf::Vector2f(gameCell.cell.m_xCoord, gameCell.cell.m_yCoord));
 		gameCell.costLabel.setCharacterSize(10);
 		//gameCell.costLabel.setScale(0.4, 0.4);
-		gameCell.costLabel.setColor(sf::Color::Black);
+		gameCell.costLabel.setFillColor(sf::Color::White);
 	}
 	
 	
@@ -140,7 +162,7 @@ void Game::loop()
 				break;
 			case sf::Event::KeyReleased:
 				m_keyHandler.updateKey(event.key.code, false);
-				if (event.key.code = sf::Keyboard::Space)
+				if (event.key.code == sf::Keyboard::Space)
 				{
 					m_mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition(m_window));
 					for (auto & cell : gameGrid)
@@ -188,7 +210,8 @@ void Game::loop()
 						}
 						else
 						{
-							grid.originalColor = sf::Color::White;
+							grid.originalColor = sf::Color(0.0f, 0.0f, 50.0f + (grid.cell.G * 3), 255.0f);
+							//grid.originalColor = sf::Color::White;
 						}
 						grid.rect.setFillColor(grid.originalColor);
 					}
@@ -272,7 +295,8 @@ void Game::loop()
 					}
 					else
 					{
-						grid.originalColor = sf::Color::White;
+						grid.originalColor = sf::Color(0.0f, 0.0f, 50.0f + (grid.cell.G * 3), 255.0f);
+						//grid.originalColor = sf::Color::White;
 					}
 					grid.rect.setFillColor(grid.originalColor);
 				}

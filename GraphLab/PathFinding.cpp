@@ -133,6 +133,9 @@ void PathFinding::wavefrontAlgorithm()
 		}
 	}
 	m_pathToGoal.push_back(new Vector2D(m_goalCell->m_xCoord + m_cellOffset, m_goalCell->m_yCoord + m_cellOffset));
+
+	
+
 	int i = 1000;
 }
 
@@ -143,15 +146,7 @@ void PathFinding::wavefrontAlgorithm()
 /// </summary>
 void PathFinding::createAdjecancySets()
 {
-	int max_grid_size = 735;
-	int up = -50;
-	int top_right = -49;
-	int right = 1;
-	int bottom_right = 51;
-	int bottom = 50;
-	int bottom_left = 49;
-	int left = -1;
-	int top_left = -51;
+
 	for (int i = 0; i < m_openList.size(); i++)
 	{
 		auto currentCell = m_openList[i];

@@ -4,6 +4,7 @@
 #include "GridCell.h"
 #include <list>
 #include <iostream>
+#include <map>
 
 class PathFinding
 {
@@ -11,8 +12,6 @@ public:
 	PathFinding();
 	~PathFinding();
 
-	void FindPath(Vector2D currentPos, Vector2D targetPos);
-	Vector2D NextPathPos(Vector2D pos, float radius);
 	void addCell(GridCell *cell);
 	void ClearOpenList() { m_openList.clear(); }
 	void ClearVisitedList() { m_visitedList.clear(); }
@@ -23,11 +22,6 @@ public:
 	void updateGoal(GridCell *goal);
 	void wavefrontAlgorithm();
 	void createAdjecancySets();
-//private:
-	void SetStartAndGoal(GridCell start, GridCell goal);
-	void PathOpened(int x, int y, float newCost, GridCell *parent);
-	GridCell *GetNextCell();
-	void ContinuePath();
 
 	GridCell *m_startCell;
 	GridCell *m_goalCell;
@@ -38,6 +32,15 @@ public:
 
 	GridCell *m_previousStartCell;
 	GridCell *m_previousGoalCell;
+	const int max_grid_size = 735;
+	const int up = -50;
+	const int top_right = -49;
+	const int right = 1;
+	const int bottom_right = 51;
+	const int bottom = 50;
+	const int bottom_left = 49;
+	const int left = -1;
+	const int top_left = -51;
 
 };
 
