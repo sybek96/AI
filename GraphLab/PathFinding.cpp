@@ -136,7 +136,6 @@ void PathFinding::wavefrontAlgorithm()
 
 	
 
-	int i = 1000;
 }
 
 /// <summary>

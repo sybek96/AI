@@ -115,7 +115,14 @@ void Game::init()
 	for (auto& gameCell : gameGrid)
 	{
 		gameCell.costLabel.setFont(font);
-		gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.G)));
+		if (gameCell.cell.GetF() > 1000)
+		{
+			gameCell.costLabel.setString("X");
+		}
+		else
+		{
+			gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.GetF())));
+		}
 		gameCell.costLabel.setPosition(sf::Vector2f(gameCell.cell.m_xCoord, gameCell.cell.m_yCoord));
 		gameCell.costLabel.setCharacterSize(10);
 		//gameCell.costLabel.setScale(0.4, 0.4);
@@ -216,6 +223,10 @@ void Game::loop()
 						grid.rect.setFillColor(grid.originalColor);
 					}
 				}
+				if (event.key.code == sf::Keyboard::V)
+				{
+					isCostDisplayed = !isCostDisplayed;
+				}
 			default:
 				break;
 			case sf::Event::MouseButtonReleased:
@@ -246,7 +257,14 @@ void Game::loop()
 
 							for (auto& gameCell : gameGrid)
 							{
-								gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.G)));
+								if (gameCell.cell.GetF() > 1000)
+								{
+									gameCell.costLabel.setString("X");
+								}
+								else
+								{
+									gameCell.costLabel.setString(std::to_string(static_cast<int>(gameCell.cell.GetF())));
+								}
 							}
 						}
 						lines.clear();
@@ -272,7 +290,14 @@ void Game::loop()
 								cell.cell.blocked = true;
 								cell.cell.G = 9999;
 								//m_pathFinding.updateGoal(&cell.cell);
-								cell.costLabel.setString(std::to_string(static_cast<int>(cell.cell.G)));
+								if (cell.cell.GetF() > 1000)
+								{
+									cell.costLabel.setString("X");
+								}
+								else
+								{
+									cell.costLabel.setString(std::to_string(static_cast<int>(cell.cell.GetF())));
+								}
 							}
 							recreateAdjecancySet = true;
 						}
@@ -338,7 +363,10 @@ void Game::draw()
 	for (auto & cell : gameGrid)
 	{
 		m_window.draw(cell.rect);
-		m_window.draw(cell.costLabel);
+		if (isCostDisplayed)
+		{
+			m_window.draw(cell.costLabel);
+		}
 	}
 	
 	m_window.draw(lines);

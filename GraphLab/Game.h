@@ -53,6 +53,7 @@ private:
 	sf::Font font;
 	sf::VertexArray lines;
 	bool recreateAdjecancySet = false; //we will only recreate adjecancy sets if new obstacles were added
+	bool isCostDisplayed = false;
 	sf::Texture m_info;
 	sf::Sprite m_infoSprite;
 };
