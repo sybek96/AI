@@ -134,8 +134,27 @@ void PathFinding::wavefrontAlgorithm()
 	}
 	m_pathToGoal.push_back(new Vector2D(m_goalCell->m_xCoord + m_cellOffset, m_goalCell->m_yCoord + m_cellOffset));
 
-	
-
+	for (int i = 0; i < m_openList.size(); i++)
+	{
+		if (!m_openList.at(i)->blocked)
+		{
+			GridCell* lowestCostCell = nullptr;
+			for (auto & cell : m_openList.at(i)->adjecancySet)
+			{
+				if (nullptr == lowestCostCell || lowestCostCell->GetF() > cell->GetF())
+				{
+					lowestCostCell = cell;
+				}
+			}
+			Vector2D cellCenter = Vector2D(m_openList.at(i)->m_xCoord + 7.5, m_openList.at(i)->m_yCoord + 7.5);
+			Vector2D cellVec = Vector2D(lowestCostCell->m_xCoord + 7.5, lowestCostCell->m_yCoord + 7.5);
+			m_openList.at(i)->m_direction = cellCenter + (cellVec - cellCenter);
+		}
+		else
+		{
+			m_openList.at(i)->m_direction = Vector2D(m_openList.at(i)->m_xCoord + 7.5, m_openList.at(i)->m_yCoord + 7.5);
+		}
+	}
 }
 
 /// <summary>

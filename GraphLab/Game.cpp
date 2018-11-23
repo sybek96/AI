@@ -37,7 +37,6 @@ Game::~Game()
 void Game::init()
 {
 	lines.setPrimitiveType(sf::LinesStrip);
-	
 	srand(time(NULL));
 
 	for (int i = 0; i < 50; i++)
@@ -88,9 +87,9 @@ void Game::init()
 		//}
 		//grid.rect.setFillColor(grid.originalColor);
 	}
-
 	m_pathFinding.createAdjecancySets();
 	m_pathFinding.wavefrontAlgorithm();
+	createFieldVectors();
 	for (auto & grid : gameGrid)
 	{
 		if (grid.cell.isGoal)
@@ -134,6 +133,12 @@ void Game::init()
 	{
 		lines.append(sf::Vertex(sf::Vector2f(m_pathFinding.m_pathToGoal.at(i)->x, m_pathFinding.m_pathToGoal.at(i)->y), sf::Color::Red));
 	}
+
+
+
+	//fieldVectors.append(sf::Vertex(directionAsSFVector, sf::Color::Black));
+	//fieldVectors.append(sf::Vertex(positionAsSFVector, sf::Color::Black));
+
 
 	loop();
 }
@@ -191,6 +196,8 @@ void Game::loop()
 							{
 								m_pathFinding.createAdjecancySets();
 								recreateAdjecancySet = false;
+								createFieldVectors();
+
 							}
 							m_pathFinding.wavefrontAlgorithm();
 
@@ -225,7 +232,23 @@ void Game::loop()
 				}
 				if (event.key.code == sf::Keyboard::V)
 				{
-					isCostDisplayed = !isCostDisplayed;
+					if (!isCostDisplayed && !clearBoard)
+					{
+						isCostDisplayed = true;
+						isVectorFieldDisplayed = false;
+					}
+					else if (!isVectorFieldDisplayed)
+					{
+						isCostDisplayed = false;
+						isVectorFieldDisplayed = true;
+						clearBoard = true;
+					}
+					else
+					{
+						isCostDisplayed = false;
+						isVectorFieldDisplayed = false;
+						clearBoard = false;
+					}
 				}
 			default:
 				break;
@@ -254,6 +277,7 @@ void Game::loop()
 								recreateAdjecancySet = false;
 							}
 							m_pathFinding.wavefrontAlgorithm();
+							createFieldVectors();
 
 							for (auto& gameCell : gameGrid)
 							{
@@ -368,9 +392,18 @@ void Game::draw()
 			m_window.draw(cell.costLabel);
 		}
 	}
-	
-	m_window.draw(lines);
+
 	m_window.draw(m_infoSprite);
+	if (isVectorFieldDisplayed)
+	{
+		for (auto & strip : fieldVectors)
+		{
+			m_window.draw(strip);
+		}
+	}
+	m_window.draw(lines);
+
+
 	m_window.display();
 }
 
@@ -428,4 +461,17 @@ void Game::createObstacles()
 	gameGrid.at(2178).cell.blocked = true;
 
 
+}
+
+void Game::createFieldVectors()
+{
+	fieldVectors.clear();
+	for (int i = 0; i < m_pathFinding.m_openList.size(); i++)
+	{
+		sf::Vector2f directionAsSFVector = sf::Vector2f(m_pathFinding.m_openList.at(i)->m_direction.x, m_pathFinding.m_openList.at(i)->m_direction.y);
+		sf::Vector2f positionAsSFVector = sf::Vector2f(m_pathFinding.m_openList.at(i)->m_xCoord + 7.5, m_pathFinding.m_openList.at(i)->m_yCoord + 7.5);
+		fieldVectors.push_back(sf::VertexArray(sf::LineStrip));
+		fieldVectors.at(i).append(sf::Vertex(directionAsSFVector, sf::Color::White));
+		fieldVectors.at(i).append(sf::Vertex(positionAsSFVector, sf::Color::White));
+	}
 }

@@ -31,6 +31,7 @@ public:
 	//draw the game elements
 	void draw();
 	void createObstacles();
+	void createFieldVectors();
 
 private:
 	//the render window object
@@ -54,7 +55,10 @@ private:
 	sf::VertexArray lines;
 	bool recreateAdjecancySet = false; //we will only recreate adjecancy sets if new obstacles were added
 	bool isCostDisplayed = false;
+	bool isVectorFieldDisplayed = false;
+	bool clearBoard = false;
 	sf::Texture m_info;
 	sf::Sprite m_infoSprite;
+	std::vector<sf::VertexArray> fieldVectors;
 };
 

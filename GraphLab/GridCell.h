@@ -25,7 +25,7 @@ public:
 
 	GridCell(int x, int y, GridCell* _parent = 0) : m_xCoord(x), m_yCoord(y),
 		parent(_parent), m_id(x * WORLD_SIZE + y), G(0), H(0) {
-		m_direction = Vector2D(0, 0);
+		m_direction = Vector2D(m_xCoord + 7.5, m_yCoord + 7.5);
 	};
 
 	//G + H (
