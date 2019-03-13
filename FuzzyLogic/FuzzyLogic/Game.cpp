@@ -25,12 +25,12 @@ Game::Game() :
 	m_beginText.setPosition(sf::Vector2f(100.0f, 250.0f));
 
 	m_allyText.setPosition(sf::Vector2f(30, 320));
-	m_allyText.setColor(sf::Color::Green);
+	m_allyText.setFillColor(sf::Color::Green);
 
 	m_enemyAmountText.setPosition(sf::Vector2f(500, 320));
-	m_enemyAmountText.setColor(sf::Color::Red);
+	m_enemyAmountText.setFillColor(sf::Color::Red);
 	m_enemyDistanceText.setPosition(sf::Vector2f(500, 350));
-	m_enemyDistanceText.setColor(sf::Color::Red);
+	m_enemyDistanceText.setFillColor(sf::Color::Red);
 
 }
 
